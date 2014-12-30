@@ -1,0 +1,36 @@
+From 1ad9a73e3c5fd69ab56add206163e4101fd3d010 Mon Sep 17 00:00:00 2001
+From: Jens Rehsack <sno@netbsd.org>
+Date: Thu, 27 Nov 2014 16:06:14 +0100
+Subject: [PATCH 2/4] include rtl8189es driver in kernel build
+
+---
+ drivers/net/wireless/Kconfig  | 1 +
+ drivers/net/wireless/Makefile | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index f8f0156..e90b8b5 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -277,6 +277,7 @@ source "drivers/net/wireless/orinoco/Kconfig"
+ source "drivers/net/wireless/p54/Kconfig"
+ source "drivers/net/wireless/rt2x00/Kconfig"
+ source "drivers/net/wireless/rtlwifi/Kconfig"
++source "drivers/net/wireless/rtl8189es/Kconfig"
+ source "drivers/net/wireless/ti/Kconfig"
+ source "drivers/net/wireless/zd1211rw/Kconfig"
+ source "drivers/net/wireless/mwifiex/Kconfig"
+diff --git a/drivers/net/wireless/Makefile b/drivers/net/wireless/Makefile
+index 67156ef..f84f15d 100644
+--- a/drivers/net/wireless/Makefile
++++ b/drivers/net/wireless/Makefile
+@@ -24,6 +24,7 @@ obj-$(CONFIG_B43LEGACY)		+= b43legacy/
+ obj-$(CONFIG_ZD1211RW)		+= zd1211rw/
+ obj-$(CONFIG_RTL8180)		+= rtl818x/
+ obj-$(CONFIG_RTL8187)		+= rtl818x/
++obj-$(CONFIG_RTL8189ES)		+= rtl8189es/
+ obj-$(CONFIG_RTLWIFI)		+= rtlwifi/
+ 
+ # 16-bit wireless PCMCIA client drivers
+-- 
+1.9.1
