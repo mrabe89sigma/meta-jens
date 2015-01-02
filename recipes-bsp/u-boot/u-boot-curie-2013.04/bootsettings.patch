@@ -1,0 +1,38 @@
+diff --git a/include/configs/mx6qcurie_common.h b/include/configs/mx6qcurie_common.h
+index 6c703a1..c865c4e 100644
+--- a/include/configs/mx6qcurie_common.h
++++ b/include/configs/mx6qcurie_common.h
+@@ -104,8 +104,8 @@
+ 
+ #define CONFIG_BOOTDELAY               1
+ 
+-#define CONFIG_LOADADDR			0x12000000
+-#define CONFIG_SYS_TEXT_BASE		0x17800000
++#define CONFIG_LOADADDR			0x10800000
++#define CONFIG_SYS_TEXT_BASE		CONFIG_LOADADDR
+ #define CONFIG_SYS_MMC_IMG_LOAD_PART	1
+ 
+ #ifdef CONFIG_SYS_BOOT_NAND
+@@ -185,6 +185,7 @@
+ 	"boot_fdt=try\0" \
+ 	"ip_dyn=yes\0" \
+ 	"console=" CONFIG_CONSOLE_DEV "\0" \
++	"baudrate=115200\0" \
+ 	"fdt_high=0xffffffff\0"	  \
+ 	"initrd_high=0xffffffff\0" \
+ 	CONFIG_MMC_DEV_SET \
+@@ -195,11 +196,11 @@
+ 	"mmcargs=setenv bootargs console=${console},${baudrate} ${smp} " \
+ 		"root=${mmcroot}\0" \
+ 	"loadbootscript=" \
+-		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
++		"extload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
+ 	"bootscript=echo Running bootscript from mmc ...; " \
+ 		"source\0" \
+-	"loaduimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${uimage}\0" \
+-	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
++	"loaduimage=extload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${uimage}\0" \
++	"loadfdt=extload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
+ 	"mmcboot=echo Booting from mmc ...; " \
+ 		"run mmcargs; " \
+ 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
