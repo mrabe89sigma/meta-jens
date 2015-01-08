@@ -1,38 +1,159 @@
+diff --git a/include/configs/mx6qcurie.h b/include/configs/mx6qcurie.h
+index 1c7da3f..f143caf 100644
+--- a/include/configs/mx6qcurie.h
++++ b/include/configs/mx6qcurie.h
+@@ -20,7 +20,12 @@
+ #define CONFIG_MACH_TYPE	3980
+ #define CONFIG_MXC_UART_BASE	UART1_BASE
+ #define CONFIG_CONSOLE_DEV		"ttymxc0"
++#define CONFIG_SYS_EMMC_ENV_DEV		1
++#define CONFIG_SYS_SDCARD_ENV_DEV	0
++#define CONFIG_SYS_MMC_ENV_DEV		CONFIG_SYS_EMMC_ENV_DEV
++#define CONFIG_SYS_MMC_ENV_PART		0	/* user partition */
+ #define CONFIG_MMCROOT			"/dev/mmcblk0p2"
++#define CONFIG_SDCARDROOT		"/dev/mmcblk1p2"
+ 
+ #include "mx6qcurie_common.h"
+ #include <asm/arch/imx-regs.h>
+@@ -30,6 +35,7 @@
+ #define CONFIG_CMD_USB
+ #define CONFIG_USB_EHCI
+ #define CONFIG_USB_EHCI_MX6
++#define CONFIG_USB_OHCI
+ #define CONFIG_USB_STORAGE
+ #define CONFIG_EHCI_HCD_INIT_AFTER_RESET
+ #define CONFIG_USB_HOST_ETHER
+@@ -39,8 +45,6 @@
+ #define CONFIG_USB_MAX_CONTROLLER_COUNT 1 /* Enabled USB controller number */
+ 
+ #define CONFIG_SYS_FSL_USDHC_NUM	2
+-#define CONFIG_SYS_MMC_ENV_DEV		1	/* SDHC4 */
+-#define CONFIG_SYS_MMC_ENV_PART		0	/* user partition */
+ 
+ #ifdef CONFIG_SYS_USE_SPINOR
+ #define CONFIG_SF_DEFAULT_CS   (0|(IMX_GPIO_NR(4, 9)<<8))
 diff --git a/include/configs/mx6qcurie_common.h b/include/configs/mx6qcurie_common.h
-index 6c703a1..c865c4e 100644
+index 6c703a1..fcf37b4 100644
 --- a/include/configs/mx6qcurie_common.h
 +++ b/include/configs/mx6qcurie_common.h
-@@ -104,8 +104,8 @@
+@@ -114,18 +114,11 @@
+ #define CONFIG_MFG_NAND_PARTITION ""
+ #endif
  
- #define CONFIG_BOOTDELAY               1
+-/*
+- * For the SPI/WEIM NOR, it can't store all the images into it due to it's
+- * capacity, we need one default mmc device to load the left image or rootfs.
+- * The end user need change the default setting according to their needs.
+- * For NAND/SATA boot, the storage is big enough to hold all the stuff.
+- * For SD/MMC boot, mmcdev is dynamiclly created due to the boot SD/MMC slot.
+- */
+-#if defined(CONFIG_SYS_BOOT_EIMNOR) || defined(CONFIG_SYS_BOOT_SPINOR)
+-#define CONFIG_MMC_DEV_SET "mmcdev=" __stringify(CONFIG_SYS_MMC_ENV_DEV)
+-#else
+-#define CONFIG_MMC_DEV_SET " "
+-#endif
++#define CONFIG_EMMC_DEV_SET "emmcdev=" __stringify(CONFIG_SYS_EMMC_ENV_DEV) "\0" \
++			    "sdcarddev=" __stringify(CONFIG_SYS_SDCARD_ENV_DEV) "\0" \
++			    "mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
++			    "mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
++			    "sdroot=" CONFIG_SDCARDROOT " rootwait rw\0"
  
--#define CONFIG_LOADADDR			0x12000000
--#define CONFIG_SYS_TEXT_BASE		0x17800000
-+#define CONFIG_LOADADDR			0x10800000
-+#define CONFIG_SYS_TEXT_BASE		CONFIG_LOADADDR
- #define CONFIG_SYS_MMC_IMG_LOAD_PART	1
- 
- #ifdef CONFIG_SYS_BOOT_NAND
-@@ -185,6 +185,7 @@
+ #define CONFIG_MFG_ENV_SETTINGS \
+ 	"mfgtool_args=setenv bootargs console=" CONFIG_CONSOLE_DEV ",115200 " \
+@@ -185,25 +178,46 @@
  	"boot_fdt=try\0" \
  	"ip_dyn=yes\0" \
  	"console=" CONFIG_CONSOLE_DEV "\0" \
 +	"baudrate=115200\0" \
  	"fdt_high=0xffffffff\0"	  \
  	"initrd_high=0xffffffff\0" \
- 	CONFIG_MMC_DEV_SET \
-@@ -195,11 +196,11 @@
+-	CONFIG_MMC_DEV_SET \
+-	"\0" \
+-	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
+-	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
++	CONFIG_EMMC_DEV_SET \
+ 	"smp=" CONFIG_SYS_NOSMP "\0"\
++	"sdargs=setenv bootargs console=${console},${baudrate} ${smp} " \
++		"root=${sdroot}\0" \
++	"sdargs=setenv bootargs console=${console},${baudrate} ${smp} " \
++		"root=${sdroot}\0" \
++	"sdloadbootscript=" \
++		"ext2load mmc ${sdcarddev}:${mmcpart} ${loadaddr} ${script};\0" \
++	"sdloaduimage=ext2load mmc ${sdcarddev}:${mmcpart} ${loadaddr} ${uimage}\0" \
++	"sdloadfdt=ext2load mmc ${sdcarddev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
++	"mmcloadbootscript=" \
++		"ext2load mmc ${emmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
  	"mmcargs=setenv bootargs console=${console},${baudrate} ${smp} " \
  		"root=${mmcroot}\0" \
- 	"loadbootscript=" \
+-	"loadbootscript=" \
 -		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
-+		"extload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
- 	"bootscript=echo Running bootscript from mmc ...; " \
+-	"bootscript=echo Running bootscript from mmc ...; " \
++	"mmcloaduimage=ext2load mmc ${emmcdev}:${mmcpart} ${loadaddr} ${uimage}\0" \
++	"mmcloadfdt=ext2load mmc ${emmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
++	"bootscript=echo Running bootscript ...; " \
  		"source\0" \
 -	"loaduimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${uimage}\0" \
 -	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
-+	"loaduimage=extload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${uimage}\0" \
-+	"loadfdt=extload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
  	"mmcboot=echo Booting from mmc ...; " \
  		"run mmcargs; " \
  		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
+-			"if run loadfdt; then " \
++			"if run mmcloadfdt; then " \
++				"bootm ${loadaddr} - ${fdt_addr}; " \
++			"else " \
++				"if test ${boot_fdt} = try; then " \
++					"bootm; " \
++				"else " \
++					"echo WARN: Cannot load the DT; " \
++				"fi; " \
++			"fi; " \
++		"else " \
++			"bootm; " \
++		"fi;\0" \
++	"sdcardboot=echo Booting from sdcard ...; " \
++		"run sdargs; " \
++		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
++			"if run sdloadfdt; then " \
+ 				"bootm ${loadaddr} - ${fdt_addr}; " \
+ 			"else " \
+ 				"if test ${boot_fdt} = try; then " \
+@@ -227,7 +241,7 @@
+ 		"fi; " \
+ 		"${get_cmd} ${uimage}; " \
+ 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
+-			"if ${get_cmd} ${fdt_addr} ${fdt_file}; then " \
++			"if tftp ${fdt_addr} ${fdt_file}; then " \
+ 				"bootm ${loadaddr} - ${fdt_addr}; " \
+ 			"else " \
+ 				"if test ${boot_fdt} = try; then " \
+@@ -241,16 +255,22 @@
+ 		"fi;\0"
+ 
+ #define CONFIG_BOOTCOMMAND \
+-	"mmc dev ${mmcdev};" \
++	"mmc dev ${emmcdev};" \
+ 	"if mmc rescan; then " \
+-		"if run loadbootscript; then " \
++	    "if run sdloadbootscript; then " \
+ 		"run bootscript; " \
+-		"else " \
+-			"if run loaduimage; then " \
+-				"run mmcboot; " \
+-			"else run netboot; " \
+-			"fi; " \
+-		"fi; " \
++	    "else if run mmcloadbootscript; then " \
++		"run bootscript; " \
++	    "else if run sdloaduimage; then " \
++		"run sdcardboot; " \
++	    "else if run mmcloaduimage; then " \
++		"run mmcboot; " \
++	    "else " \
++	        "run netboot; "\
++	    "fi;" \
++	    "fi;" \
++	    "fi;" \
++	    "fi;" \
+ 	"else run netboot; fi"
+ #endif
+ #define CONFIG_ARP_TIMEOUT     200UL
