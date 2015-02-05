@@ -12,6 +12,7 @@ set -x
 
 SDCARD_DEVICE="/dev/mmcblk0"
 UNION_SHADOWS=".shadow/.etc .shadow/.home"
+LABEL_PREFIX=""
 
 # use last image container
 for c in /data/.flashimg/*-complete.cpi /data/flashimg/*-complete
@@ -38,6 +39,7 @@ then
     if test -e /dev/mmcblk1
     then
 	SDCARD_DEVICE="/dev/mmcblk1"
+	LABEL_PREFIX="ext"
     fi
 
     echo 0 >/sys/class/leds/user1/brightness
@@ -92,9 +94,11 @@ then
 
     mkdir -p ${TEMP_DIR}/flashimg/root/boot ${TEMP_DIR}/flashimg/root/data
 
-    mkfs.ext2 -I128 -L "boot-${MACHINE}" ${SDCARD_DEVICE}p1
+    mkfs.ext2 -I128 -L "boot-${LABEL_PREFIX}${MACHINE}" ${SDCARD_DEVICE}p1
+    tune2fs -o discard,block_validity ${SDCARD_DEVICE}p1
     mount ${SDCARD_DEVICE}p1 ${TEMP_DIR}/flashimg/root/boot
-    mkfs.ext4 -L "data-${MACHINE}" ${SDCARD_DEVICE}p4
+    mkfs.ext4 -L "data-${LABEL_PREFIX}${MACHINE}" ${SDCARD_DEVICE}p4
+    tune2fs -o journal_data,discard,block_validity ${SDCARD_DEVICE}p4
     mount ${SDCARD_DEVICE}p4 ${TEMP_DIR}/flashimg/root/data
 
     dd if=${IMAGE_CONTAINER}/${UBOOT_BIN} of=${SDCARD_DEVICE} seek=2 skip=${UBOOT_PADDING} bs=512

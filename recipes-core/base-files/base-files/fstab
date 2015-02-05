@@ -10,6 +10,8 @@ tmpfs                /var/volatile        tmpfs      defaults              0  0
 # uncomment this if your device has a SD/MMC/Transflash slot
 #/dev/mmcblk0p1       /media/card          auto       defaults,sync,noauto  0  0
 /dev/disk/by-label/boot-@MACHINE@	/boot		ext2	noauto			1 2
+/dev/disk/by-label/boot-ext@MACHINE@	/boot		ext2	noauto			1 2
 /dev/disk/by-label/data-@MACHINE@	/data		ext4	defaults		1 2
+/dev/disk/by-label/data-ext@MACHINE@	/data		ext4	defaults		1 2
 none	/etc	unionfs	noauto,dirs=/data/.shadow/.etc=rw:/etc=ro	0 0
 none	/home	unionfs	noauto,dirs=/data/.shadow/.home=rw:/home=ro	0 0
