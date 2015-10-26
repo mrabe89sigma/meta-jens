@@ -39,6 +39,11 @@ do_install_append () {
     echo "blacklist ahci_imx" >${WORKDIR}/blacklist-ahci_imx.conf
     install -m 644 ${WORKDIR}/blacklist-cfg80211.conf ${D}${sysconfdir}/modprobe.d/
     install -m 644 ${WORKDIR}/blacklist-ahci_imx.conf ${D}${sysconfdir}/modprobe.d/
+
+    #
+    # workaround: fix missing references in Module.symvers
+    # https://lists.yoctoproject.org/pipermail/yocto/2015-May/024750.html
+    cp -f ${KBUILD_OUTPUT}/Module.symvers ${STAGING_KERNEL_BUILDDIR}
 }
 
 do_deploy_append () {
